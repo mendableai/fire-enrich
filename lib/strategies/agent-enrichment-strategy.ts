@@ -6,10 +6,12 @@ export class AgentEnrichmentStrategy {
   private orchestrator: AgentOrchestrator;
   
   constructor(
-    openaiApiKey: string,
+    llmApiKey: string,
     firecrawlApiKey: string,
+    llmProvider: 'openai' | 'anthropic' | 'deepseek' | 'grok' = 'openai',
+    llmModel?: string
   ) {
-    this.orchestrator = new AgentOrchestrator(firecrawlApiKey, openaiApiKey);
+    this.orchestrator = new AgentOrchestrator(firecrawlApiKey, llmApiKey, llmProvider, llmModel);
   }
   
   async enrichRow(
