@@ -154,7 +154,7 @@ export function SettingsModal({ open, onOpenChange, onSave }: SettingsModalProps
     }
   };
 
-  const availableProviders = getAvailableProviders(apiKeyStatus);
+  const availableProviders = getAvailableProviders(apiKeyStatus as unknown as Record<string, boolean>);
 
   const apiKeyProviders = [
     { id: 'firecrawl', name: 'Firecrawl', url: 'https://firecrawl.dev', required: true },
