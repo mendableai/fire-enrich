@@ -5,9 +5,11 @@ import type { EnrichmentField, EnrichmentResult } from '../types';
 
 export class OpenAIService {
   private client: OpenAI;
+  private model: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model: string = 'gpt-4o') {
     this.client = new OpenAI({ apiKey });
+    this.model = model;
   }
 
   createEnrichmentSchema(fields: EnrichmentField[]) {
@@ -139,7 +141,7 @@ export class OpenAIService {
       }
 
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.model,
         messages: [
           {
             role: 'system',
@@ -374,7 +376,7 @@ DOMAIN PARKING/SALE PAGES:
       }
       
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.model,
         messages: [
           {
             role: 'system',
@@ -754,7 +756,7 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
         .join('\n');
       
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: this.model === 'gpt-4o' ? 'gpt-4o-mini' : this.model, // Use mini for simple extraction, but respect user's model choice
         messages: [
           {
             role: 'system',
@@ -824,7 +826,7 @@ ${schemaDescription}
   ): Promise<string[]> {
     try {
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.model,
         messages: [
           {
             role: 'system',

@@ -17,6 +17,8 @@ export interface EnrichmentRequest {
   nameColumn?: string;
   useAgents?: boolean;
   useV2Architecture?: boolean;
+  llmProvider?: 'openai' | 'anthropic' | 'deepseek' | 'grok';
+  llmModel?: string;
 }
 
 export interface SearchResult {

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: EnrichmentRequest = await request.json();
-    const { rows, fields, emailColumn, nameColumn } = body;
+    const { rows, fields, emailColumn, nameColumn, llmProvider = 'openai', llmModel } = body;
 
     if (!rows || rows.length === 0) {
       return NextResponse.json(
@@ -50,16 +50,26 @@ export async function POST(request: NextRequest) {
     activeSessions.set(sessionId, abortController);
 
     // Check environment variables and headers for API keys
-    const openaiApiKey = process.env.OPENAI_API_KEY || request.headers.get('X-OpenAI-API-Key');
     const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || request.headers.get('X-Firecrawl-API-Key');
     
-    if (!openaiApiKey || !firecrawlApiKey) {
+    // Get the appropriate LLM API key based on provider
+    const llmApiKeys = {
+      openai: process.env.OPENAI_API_KEY || request.headers.get('X-OpenAI-API-Key'),
+      anthropic: process.env.ANTHROPIC_API_KEY || request.headers.get('X-Anthropic-API-Key'),
+      deepseek: process.env.DEEPSEEK_API_KEY || request.headers.get('X-DeepSeek-API-Key'),
+      grok: process.env.GROK_API_KEY || request.headers.get('X-Grok-API-Key'),
+    };
+    
+    const selectedLlmApiKey = llmApiKeys[llmProvider];
+    
+    if (!selectedLlmApiKey || !firecrawlApiKey) {
       console.error('Missing API keys:', { 
-        hasOpenAI: !!openaiApiKey, 
+        provider: llmProvider,
+        hasLLM: !!selectedLlmApiKey, 
         hasFirecrawl: !!firecrawlApiKey 
       });
       return NextResponse.json(
-        { error: 'Server configuration error: Missing API keys' },
+        { error: `Server configuration error: Missing ${llmProvider.toUpperCase()} or Firecrawl API key` },
         { status: 500 }
       );
     }
@@ -67,10 +77,12 @@ export async function POST(request: NextRequest) {
     // Always use the advanced agent architecture
     const strategyName = 'AgentEnrichmentStrategy';
     
-    console.log(`[STRATEGY] Using ${strategyName} - Advanced multi-agent architecture with specialized agents`);
+    console.log(`[STRATEGY] Using ${strategyName} with ${llmProvider.toUpperCase()} - Advanced multi-agent architecture with specialized agents`);
     const enrichmentStrategy = new AgentEnrichmentStrategy(
-      openaiApiKey,
-      firecrawlApiKey
+      selectedLlmApiKey,
+      firecrawlApiKey,
+      llmProvider,
+      llmModel
     );
 
     // Load skip list
