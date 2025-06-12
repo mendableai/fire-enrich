@@ -80,25 +80,43 @@ export default function CSVEnrichmentPage() {
   }, []);
 
   const handleCSVUpload = async (rows: CSVRow[], columns: string[]) => {
-    // Check if we have Firecrawl API key
-    const response = await fetch('/api/check-env');
-    const data = await response.json();
-    const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
-    const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const savedFirecrawlKey = localStorage.getItem('firecrawl_api_key');
-    const savedOpenAIKey = localStorage.getItem('openai_api_key');
+    try {
+      // Check if we have Firecrawl API key
+      const response = await fetch('/api/check-env');
 
-    if ((!hasFirecrawl && !savedFirecrawlKey) || (!hasOpenAI && !savedOpenAIKey)) {
-      // Save the CSV data temporarily and show API key modal
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const hasFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
+      const hasOpenAI = data.environmentStatus.OPENAI_API_KEY;
+      const savedFirecrawlKey = localStorage.getItem('firecrawl_api_key');
+      const savedOpenAIKey = localStorage.getItem('openai_api_key');
+
+      if ((!hasFirecrawl && !savedFirecrawlKey) || (!hasOpenAI && !savedOpenAIKey)) {
+        // Save the CSV data temporarily and show API key modal
+        setPendingCSVData({ rows, columns });
+        setMissingKeys({
+          firecrawl: !hasFirecrawl && !savedFirecrawlKey,
+          openai: !hasOpenAI && !savedOpenAIKey,
+        });
+        setShowApiKeyModal(true);
+      } else {
+        setCsvData({ rows, columns });
+        setStep('setup');
+      }
+    } catch (error) {
+      console.error('Error checking environment:', error);
+      toast.error('Failed to check environment. Please try again.');
+
+      // Fallback: proceed with CSV upload but show API key modal
       setPendingCSVData({ rows, columns });
       setMissingKeys({
-        firecrawl: !hasFirecrawl && !savedFirecrawlKey,
-        openai: !hasOpenAI && !savedOpenAIKey,
+        firecrawl: true,
+        openai: true,
       });
       setShowApiKeyModal(true);
-    } else {
-      setCsvData({ rows, columns });
-      setStep('setup');
     }
   };
 
@@ -128,67 +146,78 @@ export default function CSVEnrichmentPage() {
   };
 
   const handleApiKeySubmit = async () => {
-    // Check environment again to see what's missing
-    const response = await fetch('/api/check-env');
-    const data = await response.json();
-    const hasEnvFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
-    const hasEnvOpenAI = data.environmentStatus.OPENAI_API_KEY;
-    const hasSavedFirecrawl = localStorage.getItem('firecrawl_api_key');
-    const hasSavedOpenAI = localStorage.getItem('openai_api_key');
-    
-    const needsFirecrawl = !hasEnvFirecrawl && !hasSavedFirecrawl;
-    const needsOpenAI = !hasEnvOpenAI && !hasSavedOpenAI;
-
-    if (needsFirecrawl && !firecrawlApiKey.trim()) {
-      toast.error('Please enter a valid Firecrawl API key');
-      return;
-    }
-    
-    if (needsOpenAI && !openaiApiKey.trim()) {
-      toast.error('Please enter a valid OpenAI API key');
-      return;
-    }
-
-    setIsValidatingApiKey(true);
-
     try {
-      // Test the Firecrawl API key if provided
-      if (firecrawlApiKey) {
-        const response = await fetch('/api/scrape', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Firecrawl-API-Key': firecrawlApiKey,
-          },
-          body: JSON.stringify({ url: 'https://example.com' }),
-        });
+      // Check environment again to see what's missing
+      const response = await fetch('/api/check-env');
 
-        if (!response.ok) {
-          throw new Error('Invalid Firecrawl API key');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const hasEnvFirecrawl = data.environmentStatus.FIRECRAWL_API_KEY;
+      const hasEnvOpenAI = data.environmentStatus.OPENAI_API_KEY;
+      const hasSavedFirecrawl = localStorage.getItem('firecrawl_api_key');
+      const hasSavedOpenAI = localStorage.getItem('openai_api_key');
+
+      const needsFirecrawl = !hasEnvFirecrawl && !hasSavedFirecrawl;
+      const needsOpenAI = !hasEnvOpenAI && !hasSavedOpenAI;
+
+      if (needsFirecrawl && !firecrawlApiKey.trim()) {
+        toast.error('Please enter a valid Firecrawl API key');
+        return;
+      }
+
+      if (needsOpenAI && !openaiApiKey.trim()) {
+        toast.error('Please enter a valid OpenAI API key');
+        return;
+      }
+
+      setIsValidatingApiKey(true);
+
+      try {
+        // Test the Firecrawl API key if provided
+        if (firecrawlApiKey) {
+          const response = await fetch('/api/scrape', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Firecrawl-API-Key': firecrawlApiKey,
+            },
+            body: JSON.stringify({ url: 'https://example.com' }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Invalid Firecrawl API key');
+          }
+
+          // Save the API key to localStorage
+          localStorage.setItem('firecrawl_api_key', firecrawlApiKey);
         }
-        
-        // Save the API key to localStorage
-        localStorage.setItem('firecrawl_api_key', firecrawlApiKey);
-      }
-      
-      // Save OpenAI API key if provided
-      if (openaiApiKey) {
-        localStorage.setItem('openai_api_key', openaiApiKey);
-      }
 
-      toast.success('API keys saved successfully!');
-      setShowApiKeyModal(false);
+        // Save OpenAI API key if provided
+        if (openaiApiKey) {
+          localStorage.setItem('openai_api_key', openaiApiKey);
+        }
 
-      // Process the pending CSV data
-      if (pendingCSVData) {
-        setCsvData(pendingCSVData);
-        setStep('setup');
-        setPendingCSVData(null);
+        toast.success('API keys saved successfully!');
+        setShowApiKeyModal(false);
+
+        // Process the pending CSV data
+        if (pendingCSVData) {
+          setCsvData(pendingCSVData);
+          setStep('setup');
+          setPendingCSVData(null);
+        }
+      } catch (error) {
+        toast.error('Invalid API key. Please check and try again.');
+        console.error('API key validation error:', error);
+      } finally {
+        setIsValidatingApiKey(false);
       }
     } catch (error) {
-      toast.error('Invalid API key. Please check and try again.');
-      console.error('API key validation error:', error);
-    } finally {
+      console.error('Error checking environment:', error);
+      toast.error('Failed to check environment. Please try again.');
       setIsValidatingApiKey(false);
     }
   };
