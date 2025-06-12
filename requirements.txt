@@ -1,0 +1,6 @@
+crewai[tools]==0.70.1
+pydantic>=2.7.0,<3.0.0
+python-dotenv==1.0.0
+openai==1.51.2
+firecrawl-py==0.0.16
+typing-extensions>=4.11,<5
