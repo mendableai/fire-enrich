@@ -1,31 +1,25 @@
-# Fire Enrich - AI-Powered Data Enrichment Tool
+# Fire Enrich
 
-<div align="center">
-  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjJwMnF2cW5zbXBhbGV6NXBpb3lkZmVhMWEwY3hmdmt3d3ZtbWc5YSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QhpbWI09KyFZ0rwD72/giphy.gif" alt="Fire Enrich Demo" width="100%" />
-</div>
+Transform simple email lists into rich datasets with AI-powered data enrichment.
 
-Turn a simple list of emails into a rich dataset with company profiles, funding data, tech stacks, and more. Powered by [Firecrawl](https://www.firecrawl.dev/) and a multi-agent AI system.
+## What is Fire Enrich?
 
-## Technologies
+Fire Enrich is an AI-powered data enrichment tool that transforms basic CSV files containing email addresses into comprehensive business intelligence datasets. Using advanced web scraping and AI extraction, it automatically discovers and structures information about companies, their leadership, funding, technology stack, and much more.
 
-- **Firecrawl**: Web scraping and content aggregation
-- **OpenAI**: Intelligent data extraction and synthesis
-- **Next.js 15**: Modern React framework with App Router
+### Technologies Used
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmendableai%2Ffire-enrich-standalone&env=FIRECRAWL_API_KEY,OPENAI_API_KEY&envDescription=API%20keys%20required%20for%20Fire%20Enrich&envLink=https%3A%2F%2Fgithub.com%2Fmendableai%2Ffire-enrich-standalone%23required-api-keys)
+- **Firecrawl**: Advanced web scraping and search capabilities
+- **OpenAI GPT-4**: Intelligent data extraction and synthesis
+- **Next.js**: Modern React framework for the user interface
+- **TypeScript**: Type-safe development environment
+- **CrewAI**: Python multiagent framework for advanced processing
+- **Selenium**: Browser automation for interactive web scraping
 
-## Setup
+## Quick Start
 
-### Required API Keys
+### Option 1: Frontend UI (Recommended)
 
-| Service | Purpose | Get Key |
-|---------|---------|---------|
-| Firecrawl | Web scraping and content aggregation | [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys) |
-| OpenAI | Intelligent data extraction | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-
-### Quick Start
-
-#### Option 1: Frontend UI (Recommended for CSV Processing)
+The easiest way to get started is with the web interface:
 
 1. **Clone this repository**
    ```bash
@@ -58,9 +52,9 @@ Turn a simple list of emails into a rich dataset with company profiles, funding 
    - Watch real-time processing with AI agents
    - Download the enriched results
 
-#### Option 2: Python Backend (Advanced Users & Custom Integration)
+### Option 2: Python Backend (Advanced Users)
 
-The repository also includes a powerful Python backend using CrewAI's multiagent framework for advanced CSV processing and lead enrichment.
+For advanced CSV processing, custom integration, or enhanced lead list processing:
 
 1. **Install Python dependencies:**
    ```bash
@@ -75,208 +69,234 @@ The repository also includes a powerful Python backend using CrewAI's multiagent
    # OPENAI_API_KEY=your_openai_api_key_here
    ```
 
-3. **Use Python Lead Enricher:**
+3. **Basic Usage:**
    ```python
    from src.lead_enricher import LeadEnricher
+   from src.models.schemas import EmailContext, EnrichmentField, FieldType
    
    # Individual email enrichment
    enricher = LeadEnricher()
    result = enricher.enrich_email_sync("contact@example.com", fields)
    
-   # CSV batch processing with enhanced features
-   result = enricher.process_lead_csv('your_leads.csv', 'enriched_leads.csv')
+   # CSV batch processing
+   result = enricher.enrich_csv('input.csv', 'output.csv')
    ```
 
-4. **Enhanced CSV Processing Features:**
-   - **Decision Maker Validation**: Ensures each company has valid decision makers
-   - **Company Description Research**: Consolidates keywords with web research
-   - **Florida Sunbiz Integration**: Interactive business registry lookups
-   - **Email Research**: Finds missing personal and business emails
-   - **Comprehensive Data Cleaning**: Removes unnecessary columns and validates data
+4. **Enhanced Lead CSV Processing:**
+   ```python
+   # Process lead lists with advanced features
+   result = enricher.process_lead_csv('leads.csv', 'processed_leads.csv')
+   print(f"Decision makers found: {result.decision_makers_found}")
+   print(f"Company descriptions created: {result.company_descriptions_created}")
+   ```
 
-### Architecture Overview
+## Features
 
-This repository contains two complementary implementations:
+### Frontend UI Features
+- **Smart Email Detection**: Automatic email column detection and domain extraction
+- **Real-time Processing**: Server-Sent Events for live progress updates
+- **Flexible Field Selection**: Choose from preset fields or create custom ones
+- **Agent-Based Enrichment**: Specialized AI agents for different data types
+- **Export Options**: CSV and JSON formats with confidence scores
 
-- **TypeScript Frontend**: Next.js UI with real-time CSV processing at `/fire-enrich`
-- **Python Backend**: CrewAI multiagent system for advanced lead enrichment and data cleaning
+### Python Backend Features
+- **Multiagent Architecture**: 6 specialized AI agents working sequentially
+- **Enhanced CSV Processing**: Advanced lead list processing with data cleaning
+- **Decision Maker Validation**: Intelligent filtering based on seniority and job titles
+- **Company Description Research**: Consolidates keywords with web research
+- **Florida Sunbiz Integration**: Interactive business registry lookups
+- **Email Research**: Finds missing personal and business emails
+- **Hybrid Web Scraping**: Crawl4AI primary with Firecrawl fallback
 
-Both systems use the same API keys and can work independently or together depending on your needs.
+### Specialized AI Agents
 
-## Example Enrichment
+1. **Discovery Agent**: Extracts foundational company information
+2. **Company Profile Agent**: Gathers detailed business information
+3. **Funding Agent**: Researches investment and funding history
+4. **Tech Stack Agent**: Identifies technologies and development tools
+5. **Metrics Agent**: Collects business metrics and performance data
+6. **General Agent**: Handles custom field extraction requirements
 
-**Before:**
-```json
-{
-  "email": "erez@wiz.io"
-}
+## Enhanced CSV Processing
+
+For processing lead lists with advanced data cleaning and enrichment:
+
+### Input CSV Format
+The system expects CSV files with columns like:
+- `organization_name`: Company name
+- `First_Name`, `Last_Name`: Contact information
+- `Seniority`: Seniority level (c_suite, director, entry)
+- `Email`, `Personal_Email_1`: Email addresses (may be empty)
+- `Linkedin_Url`, `Linkedin_Headline`: LinkedIn information
+- `Org_Website_Url`, `Org_Phone`: Company details
+- `Org_Keywords_1`, `Org_Keywords_2`: Company keywords
+
+### Data Transformations
+- **Column Consolidation**: Combines Org_Keywords into Company_Description
+- **Seniority/Title Combination**: Merges Seniority and Job Title
+- **Decision Maker Filtering**: Validates and filters for actual decision makers
+- **Email Enhancement**: Researches and fills missing email addresses
+
+### Decision Maker Validation Rules
+- **C-Suite**: Automatically considered decision makers (confidence 0.9)
+- **Director**: Usually decision makers (confidence 0.8)
+- **Entry Level**: Only if job title contains ownership/leadership keywords
+
+### Company Description Format
+Standardized format examples:
+- `"HVAC company that offers services: Air Conditioning, Heating, Ventilation"`
+- `"Construction company that offers services: Roofing, Concrete, General Contracting"`
+- `"Home Services company that offers services: Plumbing, Electrical, HVAC"`
+
+## Testing and Examples
+
+### Run Tests
+```bash
+# Test Python imports and functionality
+python tests/test_basic_imports.py
+python tests/test_enhanced_csv_processing.py
+
+# Test simple enrichment
+python tests/test_simple_enrichment.py
 ```
 
-**After:**
+### Run Examples
+```bash
+# Basic enrichment example
+python examples/example.py
+
+# Enhanced CSV processing example
+python examples/example_enhanced_csv.py
+```
+
+## API Configuration
+
+### Required API Keys
+
+| Service | Purpose | Get Key |
+|---------|---------|---------|
+| Firecrawl | Web scraping and content aggregation | [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys) |
+| OpenAI | Intelligent data extraction | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+
+### Environment Variables
+```bash
+# Required
+FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional
+OPENAI_MODEL=gpt-4                    # Default: gpt-4
+OPENAI_TEMPERATURE=0.1                # Default: 0.1
+FIRECRAWL_TIMEOUT=30000              # Default: 30000ms
+```
+
+### Alternative: Browser-based API Keys
+If you prefer not to use environment variables, Fire Enrich supports entering API keys directly in the browser:
+1. Visit the Fire Enrich page
+2. Click "Enter API Keys" when prompted
+3. Keys are stored securely in localStorage
+
+## Architecture
+
+### Multi-Agent System
+Fire Enrich employs a sophisticated orchestration system with specialized extraction modules:
+
+- **Discovery Phase**: Establishes foundation by identifying company and digital presence
+- **Profile Extraction**: Specialized logic for industry classification and business model analysis
+- **Financial Intelligence**: Targeted searches across venture databases and news sources
+- **Technical Analysis**: Deep inspection including HTML parsing and repository analysis
+- **Custom Field Handler**: Flexible extraction for any user-defined data points
+
+### Service Layer Architecture
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Frontend UI   │────▶│   API Routes     │────▶│  Service Layer  │
+│  (React/Next)   │     │   (SSE Stream)   │     │                 │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+                                                           │
+                              ┌────────────────────────────┼────────────────────┐
+                              │                            │                    │
+                    ┌─────────▼────────┐      ┌───────────▼──────┐   ┌─────────▼────────┐
+                    │ FirecrawlService │      │  OpenAIService   │   │SpecializedAgents │
+                    │  (Web Scraping)  │      │ (GPT-4 Extract)  │   │   (AI Agents)    │
+                    └──────────────────┘      └──────────────────┘   └──────────────────┘
+```
+
+### Process Flow
+
+1. **Upload & Parse**: Upload CSV with emails, extract company domains
+2. **Field Selection**: Choose data points from company descriptions to funding stages
+3. **Sequential Agent Execution**: Agents activate in phases, building on previous discoveries
+4. **Parallel Searches Per Phase**: Multiple concurrent searches using Firecrawl API
+5. **AI Synthesis**: GPT-4 analyzes findings, resolves conflicts, extracts structured data
+6. **Real-time Results**: Table populates in real-time with enriched data and source citations
+
+## Example
+
+Here's what Fire Enrich can extract from a simple email address:
+
+**Input**: `contact@stripe.com`
+
+**Output**:
 ```json
 {
-  "email": "erez@wiz.io",
-  "companyName": "Wiz",
-  "industry": "Cybersecurity",
-  "employeeCount": "1001-5000",
-  "yearFounded": 2020,
-  "headquarters": "New York, NY",
-  "fundingStage": "Series D",
-  "totalRaised": "$900M",
-  "website": "https://www.wiz.io",
+  "email": "contact@stripe.com",
+  "domain": "stripe.com",
+  "company_name": "Stripe",
+  "industry": "Financial Technology",
+  "description": "Stripe is a technology company that builds economic infrastructure for the internet. Businesses of every size—from new startups to public companies—use our software to accept payments and manage their businesses online.",
+  "employee_count": "4,000-8,000",
+  "headquarters": "San Francisco, California, United States",
+  "founded_year": "2010",
+  "website": "https://stripe.com",
+  "linkedin": "https://www.linkedin.com/company/stripe",
+  "twitter": "https://twitter.com/stripe",
+  "funding_stage": "Private",
+  "total_funding": "$2.2B",
+  "latest_funding_round": "Series H",
+  "latest_funding_amount": "$600M",
+  "latest_funding_date": "2021-03-14",
+  "investors": ["Sequoia Capital", "General Catalyst", "Andreessen Horowitz"],
+  "ceo": "Patrick Collison",
+  "cto": "David Singleton",
+  "tech_stack": ["Ruby", "JavaScript", "Go", "Scala", "React"],
+  "confidence_score": 0.95,
   "sources": [
-    "https://www.wiz.io/about",
-    "https://techcrunch.com/2023/02/27/wiz-confirms-300m-at-a-10b-valuation-to-build-out-its-cloud-security-platform/"
+    "https://stripe.com/about",
+    "https://www.crunchbase.com/organization/stripe",
+    "https://www.linkedin.com/company/stripe"
   ]
 }
 ```
 
-## How It Works
+## Configuration & Unlimited Mode
 
-### Architecture Overview: Following "ericciarla@firecrawl.dev" Through the System
-
-Let's see exactly how Fire Enrich processes a real example - enriching data for the email ericciarla@firecrawl.dev.
-
-```mermaid
-graph TD
-    Start["Input: ericciarla@firecrawl.dev - Industry, CEO, Funding Stage, Tech Stack"]:::primary
-    
-    Start -->|1. Extract Domain| Domain["Domain: firecrawl.dev - Corporate email detected"]:::primary
-    
-    Domain -->|2. Start Orchestration| Orchestrator["Agent Orchestrator - Executes agents in optimized sequence - Each phase builds on previous data"]:::synthesis
-
-    %% Phase 1: Discovery
-    Orchestrator -->|Phase 1| Discovery["Discovery Agent - Finds basic company info first"]:::agent
-    
-    Discovery -->|Parallel searches| DiscSearch["Parallel Searches: Firecrawl company, firecrawl.dev, What is Firecrawl"]:::search
-    
-    DiscSearch -->|Firecrawl API| DiscFC["3 concurrent API calls - Returns company website and basic information"]:::firecrawl
-    
-    DiscFC -->|Extracts| DiscData["Company: Firecrawl - Website: firecrawl.dev - Type: B2B SaaS"]:::source
-
-    %% Phase 2: Company Profile
-    DiscData -->|Phase 2| Profile["Company Profile Agent - Uses company name from Phase 1 to find industry details"]:::agent
-    
-    Profile -->|Parallel searches| ProfSearch["Parallel Searches: Firecrawl industry classification, Firecrawl web scraping API, Developer tools Firecrawl"]:::search
-    
-    ProfSearch -->|Firecrawl API| ProfFC["3 concurrent API calls - Searches industry-specific sources"]:::firecrawl
-    
-    ProfFC -->|Extracts| ProfData["Industry: Developer Tools - Sub-category: Web Scraping APIs - Market: B2B SaaS"]:::source
-
-    %% Phase 3: Financial
-    ProfData -->|Phase 3| Funding["Financial Intel Agent - Searches for funding using company and industry context"]:::agent
-    
-    Funding -->|Parallel searches| FundSearch["Parallel Searches: Firecrawl funding rounds, Mendable AI acquisition Firecrawl, Firecrawl investors crunchbase"]:::search
-    
-    FundSearch -->|Firecrawl API| FundFC["3 concurrent API calls - Checks TechCrunch, Crunchbase, venture news sites"]:::firecrawl
-    
-    FundFC -->|Extracts| FundData["Funding: Seed Stage - Part of Mendable AI - YC-backed company"]:::source
-
-    %% Phase 4: Tech Stack
-    FundData -->|Phase 4| Tech["Tech Stack Agent - Analyzes GitHub and tech docs - HTML source analysis"]:::agent
-    
-    Tech -->|Parallel searches| TechSearch["Parallel Searches: github.com/mendableai/firecrawl, Firecrawl API documentation, Direct HTML analysis"]:::search
-    
-    TechSearch -->|Firecrawl API| TechFC["3 concurrent API calls - HTML meta tag analysis - GitHub repo scan"]:::firecrawl
-    
-    TechFC -->|Extracts| TechData["Tech Stack: Node.js, Python, Redis, Playwright, Kubernetes"]:::source
-
-    %% Phase 5: General
-    TechData -->|Phase 5| General["General Purpose Agent - Handles custom field CEO - Uses all previous context"]:::agent
-    
-    General -->|Targeted search| GenSearch["Focused Search: Firecrawl CEO founder Eric, Eric Ciarla Firecrawl, LinkedIn company search"]:::search
-    
-    GenSearch -->|Firecrawl API| GenFC["3 concurrent API calls - Cross-references multiple sources"]:::firecrawl
-    
-    GenFC -->|Extracts| GenData["CEO: Eric Ciarla - Co-founder and CEO of Firecrawl - Previously at Mendable AI"]:::source
-
-    %% Final Synthesis
-    DiscData --> Synthesis
-    ProfData --> Synthesis
-    FundData --> Synthesis
-    TechData --> Synthesis
-    GenData --> Synthesis
-    
-    Synthesis["GPT-4o Final Synthesis - Combines all agent findings - Resolves conflicts, validates data"]:::synthesis
-    
-    Synthesis -->|Outputs| Results
-    
-    subgraph Results[Enriched Data]
-        R1["Industry: Developer Tools / Web Scraping - Source: firecrawl.dev/about"]:::good
-        R2["CEO: Eric Ciarla Co-founder and CEO - Source: linkedin.com/company/firecrawl"]:::good
-        R3["Funding: Seed Part of Mendable AI - Source: crunchbase.com"]:::good
-        R4["Tech Stack: Node.js, Python, Redis, K8s - Source: github.com/mendableai/firecrawl"]:::good
-    end
-    
-    Results -->|Final Output| Output["Updated CSV Row: ericciarla@firecrawl.dev - Complete profile with 4 new data points and sources"]:::answer
-    
-    classDef primary fill:#ff8c42,stroke:#ff6b1a,stroke-width:2px,color:#fff
-    classDef agent fill:#9c27b0,stroke:#7b1fa2,stroke-width:2px,color:#fff
-    classDef search fill:#e8e8e8,stroke:#999,stroke-width:2px,color:#333
-    classDef firecrawl fill:#ff6b1a,stroke:#ff4500,stroke-width:3px,color:#fff
-    classDef source fill:#ffa726,stroke:#ff8c42,stroke-width:2px,color:#000
-    classDef synthesis fill:#ff8c42,stroke:#ff6b1a,stroke-width:3px,color:#fff
-    classDef good fill:#f5f5f5,stroke:#666,stroke-width:1px,color:#000
-    classDef answer fill:#333,stroke:#000,stroke-width:3px,color:#fff
-```
-
-### How Each Agent Works
-
-Behind the scenes, each agent is a specialized module with its own expertise, search strategies, and type-safe output schema:
-
-1. **Discovery Agent** (Phase 1)
-   - Establishes company basics: official name, website, type of business
-   - Essential first step that provides the foundation for all other agents
-   - **Returns**: Company name, website URL, business type
-   - **Schema**: `DiscoveryResult` with fields like `companyName`, `website`, `domain`
-
-2. **Company Profile Agent** (Phase 2)
-   - Uses verified company name to search for industry and market positioning
-   - Builds on Discovery data to ensure accurate industry classification
-   - **Returns**: Industry, sub-category, business model, market segment
-   - **Schema**: `ProfileResult` with `industry`, `headquarters`, `yearFounded`, `companyType`
-
-3. **Financial Intel Agent** (Phase 3)
-   - Leverages company name + industry context for targeted funding searches
-   - Knowing the industry helps identify relevant investor databases
-   - **Returns**: Funding stage, total raised, key investors, valuation
-   - **Schema**: `FundingResult` with `fundingStage`, `totalRaised`, `lastRoundAmount`, `investors`
-
-4. **Tech Stack Agent** (Phase 4)
-   - Analyzes technology with context of company type and funding stage
-   - HTML analysis, GitHub repos, and technical documentation
-   - **Returns**: Programming languages, frameworks, infrastructure, tools
-   - **Uses**: Direct `EnrichmentResult` schema for flexible tech stack extraction
-
-5. **General Purpose Agent** (Phase 5)
-   - Handles custom fields (like CEO, competitors, etc.) with full context
-   - Benefits from all previous data to make targeted searches
-   - **Returns**: Any custom field requested by the user
-   - **Uses**: Dynamic `EnrichmentResult` schema based on user-defined fields
-
-### Why Sequential Execution?
-
-The agents execute in a carefully designed sequence where each phase builds upon the previous one:
-
-- **Context Building**: Each agent adds context that makes subsequent searches more accurate. For example, knowing a company's industry helps the funding agent search in the right venture databases.
-- **Data Validation**: Later agents can validate and refine data from earlier phases.
-- **Efficiency**: Prevents redundant searches by sharing discovered information across phases.
-- **Parallel Searches Within Phases**: While agents run sequentially, each agent performs multiple searches in parallel, maximizing speed.
-
-This architecture balances accuracy with performance - we could run all agents in parallel, but the sequential approach with shared context produces significantly better results.
-
-### Extensibility Through Type-Safe Schemas
-
-Each agent uses [Zod](https://zod.dev/) schemas to ensure type safety and make the system easily extensible:
+When you clone and run this repository locally, Fire Enrich automatically enables **Unlimited Mode**, removing the restrictions of the public demo. You can configure these limits in `app/fire-enrich/config.ts`:
 
 ```typescript
-// Example: Adding a new field to the FundingAgent
-const FundingResult = z.object({
-  fundingStage: z.string().optional(),
-  totalRaised: z.string().optional(),
-  lastRoundAmount: z.string().optional(),
-  investors: z.array(z.string()).optional(),
-  // Add your new field here:
+const isUnlimitedMode = process.env.FIRE_ENRICH_UNLIMITED === 'true' || 
+                       process.env.NODE_ENV === 'development';
+
+export const FIRE_ENRICH_CONFIG = {
+  CSV_LIMITS: {
+    MAX_ROWS: isUnlimitedMode ? Infinity : 15,
+    MAX_COLUMNS: isUnlimitedMode ? Infinity : 5,
+  },
+  REQUEST_LIMITS: {
+    MAX_FIELDS_PER_ENRICHMENT: isUnlimitedMode ? 50 : 10,
+  },
+} as const;
+```
+
+## Extending Fire Enrich
+
+Fire Enrich is designed to be easily extensible. You can add new data extraction capabilities by defining custom schemas:
+
+```typescript
+const customCompanySchema = z.object({
+  sustainability_score: z.string().optional(),
+  diversity_metrics: z.string().optional(),
+  remote_work_policy: z.string().optional(),
   debtFinancing: z.string().optional(),
 });
 ```
@@ -297,27 +317,6 @@ The field routing system automatically categorizes user requests:
 
 This design allows Fire Enrich to grow with your needs while maintaining type safety and predictable behavior.
 
-### Process Flow
-
-1.  **Upload & Parse**: Upload a CSV with emails. The system extracts the company domain from each email.
-2.  **Field Selection**: Choose the data points you need, from company descriptions to funding stages.
-3.  **Sequential Agent Execution**: Agents activate in phases, each building on previous discoveries for maximum accuracy.
-4.  **Parallel Searches Per Phase**: Within each phase, multiple searches run concurrently using the Firecrawl API.
-5.  **AI Synthesis**: GPT-4o analyzes all findings, resolves conflicts, and extracts structured data.
-6.  **Real-time Results**: Your table populates in real-time, complete with enriched data and source citations.
-
-### The Multi-Agent System
-
-Fire Enrich employs a sophisticated orchestration system that coordinates specialized extraction modules. These aren't autonomous AI agents, but rather purpose-built components that work together intelligently:
-
--   **Discovery Phase**: Establishes the foundation by identifying the company and its digital presence
--   **Profile Extraction**: Specialized logic for industry classification and business model analysis
--   **Financial Intelligence**: Targeted searches across venture databases and news sources
--   **Technical Analysis**: Deep inspection including HTML parsing and repository analysis
--   **Custom Field Handler**: Flexible extraction for any user-defined data points
-
-Each module uses GPT-4o for intelligent data extraction, but follows deterministic search patterns optimized through extensive testing. This hybrid approach combines the reliability of structured programming with the flexibility of AI-powered comprehension.
-
 ### Key Features
 
 -   **Phased Extraction System**: Sequential modules that build context for increasingly accurate results.
@@ -327,24 +326,75 @@ Each module uses GPT-4o for intelligent data extraction, but follows determinist
 -   **Full Source Citations**: Every piece of data is linked back to the URL it was found on, ensuring complete transparency.
 -   **Skip Common Providers**: Automatically skips personal emails (Gmail, Yahoo, etc.) to save on API calls and focus on company data.
 
-### Configuration & Unlimited Mode
+## Performance & Best Practices
 
-When you clone and run this repository locally, Fire Enrich automatically enables **Unlimited Mode**, removing the restrictions of the public demo. You can configure these limits in [`app/fire-enrich/config.ts`](app/fire-enrich/config.ts):
+### Performance Optimizations
+- Concurrent processing with rate limiting
+- Smart caching of search results
+- Deduplication of search queries
+- 1-second delay between rows (API protection)
 
-```typescript
-const isUnlimitedMode = process.env.FIRE_ENRICH_UNLIMITED === 'true' || 
-                       process.env.NODE_ENV === 'development';
+### Best Practices
+1. **Start Small**: Test with 5-10 rows first
+2. **Review Fields**: Ensure fields match your needs
+3. **Check Sources**: Verify data accuracy via source URLs
+4. **Monitor Progress**: Watch for errors or timeouts
+5. **Export Regularly**: Download results as you go
 
-export const FIRE_ENRICH_CONFIG = {
-  CSV_LIMITS: {
-    MAX_ROWS: isUnlimitedMode ? Infinity : 15,
-    MAX_COLUMNS: isUnlimitedMode ? Infinity : 5,
-  },
-  REQUEST_LIMITS: {
-    MAX_FIELDS_PER_ENRICHMENT: isUnlimitedMode ? 50 : 10,
-  },
-} as const;
-```
+### Rate Limits
+- **Firecrawl**: Check your plan limits
+- **OpenAI**: GPT-4 token limits apply
+- **Processing**: 1 row per second default
+- **Max Fields**: 10 per enrichment (configurable)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"No API Keys Found"**
+   - Check environment variables
+   - Try browser-based key entry
+   - Verify key validity
+
+2. **Slow Enrichment**
+   - Normal: ~5-15 seconds per row
+   - Check API rate limits
+   - Consider traditional mode
+
+3. **Missing Data**
+   - Some companies have limited online presence
+   - Check confidence scores
+   - Review source URLs
+
+4. **Export Issues**
+   - Ensure enrichment is complete
+   - Check browser console for errors
+   - Try different export format
+
+## Privacy & Security
+
+- **Local Storage**: API keys stored client-side only
+- **No Data Retention**: Processed data not stored server-side
+- **Secure Transmission**: HTTPS for all requests
+- **Source Transparency**: All data sources tracked
+
+## Dependencies
+
+### Frontend Dependencies
+- Node.js 18+ and npm/yarn/pnpm
+- Next.js 15.3.2
+- React 19
+- TypeScript 5.x
+- Tailwind CSS
+- Radix UI components
+
+### Python Backend Dependencies
+- Python 3.12+
+- CrewAI multiagent framework
+- Selenium for browser automation
+- Pandas for CSV processing
+- Pydantic for data validation
+- Additional dependencies in `requirements.txt`
 
 ## Our Open Source Philosophy
 
