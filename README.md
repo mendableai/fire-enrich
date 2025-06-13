@@ -25,15 +25,83 @@ Turn a simple list of emails into a rich dataset with company profiles, funding 
 
 ### Quick Start
 
-1. Clone this repository
-2. Create a `.env.local` file with your API keys:
+#### Option 1: Frontend UI (Recommended for CSV Processing)
+
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/RichelynScott/Lead-Enrich.git
+   cd Lead-Enrich
+   ```
+
+2. **Create environment file with your API keys:**
+   ```bash
+   cp .env.example .env.local
+   ```
+   Edit `.env.local` and add your API keys:
    ```
    FIRECRAWL_API_KEY=your_firecrawl_key
    OPENAI_API_KEY=your_openai_key
    ```
-3. Install dependencies: `npm install` or `yarn install`
-4. Run the development server: `npm run dev` or `yarn dev`
-5. Open [http://localhost:3000](http://localhost:3000)
+
+3. **Install dependencies and start the frontend:**
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+4. **Access the CSV Upload Interface:**
+   Open [http://localhost:3000/fire-enrich](http://localhost:3000/fire-enrich) in your browser
+
+5. **Upload and Process Your CSV:**
+   - Drag and drop your CSV file with email addresses
+   - Select which fields you want to enrich (company info, funding, tech stack, etc.)
+   - Watch real-time processing with AI agents
+   - Download the enriched results
+
+#### Option 2: Python Backend (Advanced Users & Custom Integration)
+
+The repository also includes a powerful Python backend using CrewAI's multiagent framework for advanced CSV processing and lead enrichment.
+
+1. **Install Python dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Set up Python environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your API keys:
+   # FIRECRAWL_API_KEY=your_firecrawl_api_key_here
+   # OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+3. **Use Python Lead Enricher:**
+   ```python
+   from src.lead_enricher import LeadEnricher
+   
+   # Individual email enrichment
+   enricher = LeadEnricher()
+   result = enricher.enrich_email_sync("contact@example.com", fields)
+   
+   # CSV batch processing with enhanced features
+   result = enricher.process_lead_csv('your_leads.csv', 'enriched_leads.csv')
+   ```
+
+4. **Enhanced CSV Processing Features:**
+   - **Decision Maker Validation**: Ensures each company has valid decision makers
+   - **Company Description Research**: Consolidates keywords with web research
+   - **Florida Sunbiz Integration**: Interactive business registry lookups
+   - **Email Research**: Finds missing personal and business emails
+   - **Comprehensive Data Cleaning**: Removes unnecessary columns and validates data
+
+### Architecture Overview
+
+This repository contains two complementary implementations:
+
+- **TypeScript Frontend**: Next.js UI with real-time CSV processing at `/fire-enrich`
+- **Python Backend**: CrewAI multiagent system for advanced lead enrichment and data cleaning
+
+Both systems use the same API keys and can work independently or together depending on your needs.
 
 ## Example Enrichment
 
