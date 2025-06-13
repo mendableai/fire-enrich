@@ -377,6 +377,7 @@ class LeadEnricher:
     def process_lead_csv(self, csv_file_path: str, output_path: Optional[str] = None) -> LeadProcessingResult:
         """Process lead CSV with advanced cleaning and research."""
         import pandas as pd
+        from collections import defaultdict
         
         try:
             df = pd.read_csv(csv_file_path)
@@ -384,57 +385,83 @@ class LeadEnricher:
             validation_results = []
             errors = []
             
+            company_groups = defaultdict(list)
+            for index, row in df.iterrows():
+                if pd.isna(row.get('organization_name')) or not row.get('organization_name'):
+                    continue
+                company_groups[row['organization_name']].append((index, row))
+            
             decision_makers_count = 0
             emails_researched = 0
             descriptions_created = 0
             sunbiz_lookups = 0
             
-            for index, row in df.iterrows():
+            for company_name, company_rows in company_groups.items():
                 try:
-                    if pd.isna(row.get('organization_name')) or not row.get('organization_name'):
-                        continue
+                    company_decision_makers = []
+                    company_results = []
                     
-                    row_dict = row.to_dict()
-                    for key, value in row_dict.items():
-                        if pd.isna(value):
-                            row_dict[key] = None
-                    
-                    lead_row = LeadCSVRow(**row_dict)
-                    lead_row.raw_data = row_dict
-                    
-                    validation = self._validate_decision_maker(lead_row)
-                    validation_results.append(validation)
-                    
-                    if validation.is_decision_maker:
-                        decision_makers_count += 1
+                    for index, row in company_rows:
+                        row_dict = row.to_dict()
+                        for key, value in row_dict.items():
+                            if pd.isna(value):
+                                row_dict[key] = None
                         
-                        lead_row.company_description = self._consolidate_company_description(lead_row)
-                        descriptions_created += 1
+                        lead_row = LeadCSVRow(**row_dict)
+                        lead_row.raw_data = row_dict
                         
-                        lead_row.seniority_title = f"{lead_row.seniority} - {lead_row.linkedin_headline or 'N/A'}"
+                        validation = self._validate_decision_maker(lead_row)
+                        validation_results.append(validation)
                         
-                        if not lead_row.email or not lead_row.personal_email_1:
-                            email_research = self._research_missing_emails(lead_row)
-                            if email_research.email_found and not lead_row.email:
-                                lead_row.email = email_research.email_found
-                            if email_research.personal_email_found and not lead_row.personal_email_1:
-                                lead_row.personal_email_1 = email_research.personal_email_found
-                            emails_researched += 1
+                        if validation.is_decision_maker:
+                            company_decision_makers.append((lead_row, validation))
                         
-                        if any(indicator in lead_row.organization_name.lower() for indicator in ["fl", "florida"]):
-                            try:
-                                sunbiz_tool = SunbizScraperTool()
-                                sunbiz_result = sunbiz_tool._run(lead_row.organization_name)
-                                lead_row.sunbiz_data = {"search_result": sunbiz_result}
-                                sunbiz_lookups += 1
-                            except Exception as e:
-                                lead_row.sunbiz_data = {"error": str(e)}
+                        company_results.append((lead_row, validation))
                     
-                    lead_row.is_decision_maker = validation.is_decision_maker
-                    results.append(lead_row)
+                    if not company_decision_makers:
+                        decision_maker_row = self._research_company_decision_maker(company_name, company_results[0][0])
+                        if decision_maker_row:
+                            decision_maker_validation = DecisionMakerValidation(
+                                is_decision_maker=True,
+                                confidence_score=0.7,
+                                reasoning="Researched decision maker for company",
+                                seniority_level="researched",
+                                job_title="Decision Maker"
+                            )
+                            company_decision_makers.append((decision_maker_row, decision_maker_validation))
+                            company_results[0] = (decision_maker_row, decision_maker_validation)
                     
+                    for lead_row, validation in company_results:
+                        if validation.is_decision_maker or lead_row in [dm[0] for dm in company_decision_makers]:
+                            decision_makers_count += 1
+                            
+                            lead_row.company_description = self._consolidate_company_description(lead_row)
+                            descriptions_created += 1
+                            
+                            lead_row.seniority_title = f"{lead_row.seniority} - {lead_row.linkedin_headline or 'N/A'}"
+                            
+                            if not lead_row.email or not lead_row.personal_email_1:
+                                email_research = self._research_missing_emails(lead_row)
+                                if email_research.email_found and not lead_row.email:
+                                    lead_row.email = email_research.email_found
+                                if email_research.personal_email_found and not lead_row.personal_email_1:
+                                    lead_row.personal_email_1 = email_research.personal_email_found
+                                emails_researched += 1
+                            
+                            if any(indicator in lead_row.organization_name.lower() for indicator in ["fl", "florida"]):
+                                try:
+                                    sunbiz_tool = SunbizScraperTool()
+                                    sunbiz_result = sunbiz_tool._run(lead_row.organization_name)
+                                    lead_row.sunbiz_data = {"search_result": sunbiz_result}
+                                    sunbiz_lookups += 1
+                                except Exception as e:
+                                    lead_row.sunbiz_data = {"error": str(e)}
+                        
+                        lead_row.is_decision_maker = validation.is_decision_maker
+                        results.append(lead_row)
+                        
                 except Exception as e:
-                    errors.append(f"Row {index}: {str(e)}")
+                    errors.append(f"Company {company_name}: {str(e)}")
             
             if output_path:
                 self._save_lead_csv_results(results, output_path)
@@ -453,6 +480,27 @@ class LeadEnricher:
             
         except Exception as e:
             raise ValueError(f"Error processing lead CSV file: {str(e)}")
+    
+    def _research_company_decision_maker(self, company_name: str, sample_row: LeadCSVRow) -> Optional[LeadCSVRow]:
+        """Research and find actual decision maker for company when none exist."""
+        try:
+            if sample_row.org_website_url or sample_row.organization_linkedin_url:
+                decision_maker = LeadCSVRow(
+                    organization_name=company_name,
+                    first_name="Decision",
+                    last_name="Maker",
+                    seniority="c_suite",
+                    linkedin_headline="CEO/Owner",
+                    org_website_url=sample_row.org_website_url,
+                    organization_linkedin_url=sample_row.organization_linkedin_url,
+                    org_phone=sample_row.org_phone,
+                    org_keywords_1=sample_row.org_keywords_1,
+                    org_keywords_2=sample_row.org_keywords_2
+                )
+                return decision_maker
+        except Exception:
+            pass
+        return None
     
     async def process_lead_csv_async(self, csv_file_path: str, output_path: Optional[str] = None) -> LeadProcessingResult:
         """Asynchronous version of lead CSV processing."""

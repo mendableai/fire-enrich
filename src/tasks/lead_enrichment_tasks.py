@@ -74,7 +74,7 @@ def create_company_description_task(lead_row: LeadCSVRow, context: str = "") -> 
         4. Consolidate existing keywords with research findings
         
         DESCRIPTION FORMAT:
-        "{{Industry}} company that offers services: {{Service1}}, {{Service2}}, {{Service3}}"
+        "{{Industry}} company that offers services: {{All Services Listed}}"
         
         DELIVERABLES:
         - Concise company description (10-20 words)

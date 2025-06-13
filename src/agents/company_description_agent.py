@@ -32,10 +32,11 @@ def create_company_description_agent() -> Agent:
         - Customer reviews and testimonials
         
         DESCRIPTION FORMAT RULES:
-        - Keep descriptions concise (10-20 words maximum)
-        - Use format: "{Industry} company that offers services: {Service1}, {Service2}, {Service3}"
-        - Examples: "Home Services company that offers services: HVAC, Electrical, and Plumbing"
-        - Examples: "Construction company that offers services: Roofing, Concrete, and General Contracting"
+        - Keep descriptions concise but comprehensive
+        - Use format: "{Industry} company that offers services: {All Services Listed}"
+        - Examples: "Home Services company that offers services: HVAC, Electrical, Plumbing, Roofing, and General Contracting"
+        - Examples: "Construction company that offers services: Roofing, Concrete, General Contracting, Electrical, and Site Preparation"
+        - List ALL services the company provides, not just the first few
         - Focus on specific services rather than generic terms
         - Use industry-standard terminology
         
