@@ -59,13 +59,19 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
-      navIcons={{
-        left: () => <ChevronLeft className="size-4" />,
-        right: () => <ChevronRight className="size-4" />,
+      components={{
+        IconLeft: ({ className, ...props }) => (
+          <ChevronLeft className={cn("size-4", className)} {...props} />
+        ),
+        IconRight: ({ className, ...props }) => (
+          <ChevronRight className={cn("size-4", className)} {...props} />
+        ),
       }}
       {...props}
     />
   )
 }
+
+Calendar.displayName = "Calendar"
 
 export { Calendar }
