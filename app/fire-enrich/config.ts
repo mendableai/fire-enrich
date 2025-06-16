@@ -6,8 +6,8 @@ const isUnlimitedMode = process.env.FIRE_ENRICH_UNLIMITED === 'true' ||
 export const FIRE_ENRICH_CONFIG = {
   // CSV upload limits
   CSV_LIMITS: {
-    MAX_ROWS: isUnlimitedMode ? Infinity : 15,
-    MAX_COLUMNS: isUnlimitedMode ? Infinity : 5,
+    MAX_ROWS: isUnlimitedMode ? Infinity : 150000,
+    MAX_COLUMNS: isUnlimitedMode ? Infinity : 500000,
   },
   
   // Processing configuration
