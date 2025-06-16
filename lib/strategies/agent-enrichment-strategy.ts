@@ -1,15 +1,18 @@
 import { AgentOrchestrator } from '../agent-architecture';
 import type { CSVRow, EnrichmentField, RowEnrichmentResult, EnrichmentResult } from '../types';
 import { shouldSkipEmail, loadSkipList, getSkipReason } from '../utils/skip-list';
+import { OpenAIService } from '../services/openai'; // Added OpenAIService
 
 export class AgentEnrichmentStrategy {
   private orchestrator: AgentOrchestrator;
   
   constructor(
-    openaiApiKey: string,
-    firecrawlApiKey: string,
+    // openaiApiKey: string, // Removed
+    // firecrawlApiKey: string, // Removed
+    openaiService: OpenAIService, // Added openaiService
   ) {
-    this.orchestrator = new AgentOrchestrator(firecrawlApiKey, openaiApiKey);
+    // this.orchestrator = new AgentOrchestrator(firecrawlApiKey, openaiApiKey); // Old
+    this.orchestrator = new AgentOrchestrator(openaiService); // New: Pass OpenAIService instance
   }
   
   async enrichRow(

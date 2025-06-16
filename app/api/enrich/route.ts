@@ -51,26 +51,31 @@ export async function POST(request: NextRequest) {
 
     // Check environment variables and headers for API keys
     const openaiApiKey = process.env.OPENAI_API_KEY || request.headers.get('X-OpenAI-API-Key');
-    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || request.headers.get('X-Firecrawl-API-Key');
+    // const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || request.headers.get('X-Firecrawl-API-Key'); // Removed
     
-    if (!openaiApiKey || !firecrawlApiKey) {
+    if (!openaiApiKey) { // Check only for OpenAI API key
       console.error('Missing API keys:', { 
         hasOpenAI: !!openaiApiKey, 
-        hasFirecrawl: !!firecrawlApiKey 
+        // hasFirecrawl: !!firecrawlApiKey // Removed
       });
       return NextResponse.json(
-        { error: 'Server configuration error: Missing API keys' },
+        { error: 'Server configuration error: Missing OpenAI API key' }, // Updated error message
         { status: 500 }
       );
     }
+
+    // Import and create OpenAIService instance
+    const { OpenAIService } = await import('@/lib/services/openai');
+    const openaiService = new OpenAIService(openaiApiKey);
 
     // Always use the advanced agent architecture
     const strategyName = 'AgentEnrichmentStrategy';
     
     console.log(`[STRATEGY] Using ${strategyName} - Advanced multi-agent architecture with specialized agents`);
     const enrichmentStrategy = new AgentEnrichmentStrategy(
-      openaiApiKey,
-      firecrawlApiKey
+      // openaiApiKey, // No longer pass API key directly
+      // firecrawlApiKey // Removed
+      openaiService // Pass OpenAIService instance
     );
 
     // Load skip list

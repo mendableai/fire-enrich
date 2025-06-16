@@ -1,96 +1,97 @@
 import { z } from 'zod';
-import FirecrawlApp from '@mendable/firecrawl-js';
+// import FirecrawlApp from '@mendable/firecrawl-js'; // Removed Firecrawl
 
 interface ScrapeResult {
   success: boolean;
   markdown?: string;
   html?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>; // Ensure this can hold { sourceURL: string } or { originalUrl: string }
 }
 
-export function createWebsiteScraperTool(firecrawlApiKey: string, onProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void) {
-  const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey });
+export function createWebsiteScraperTool(onProgress?: (message: string, type: 'info' | 'success' | 'warning' | 'agent') => void) {
+  // const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey }); // Removed Firecrawl instantiation
   
   return {
-    name: 'scrape_website',
-    description: 'Scrape a specific webpage for information',
+    name: 'process_website_content', // Renamed tool to reflect new functionality
+    description: 'Process pre-fetched website content for information', // Updated description
     parameters: z.object({
-      url: z.string().url().describe('URL to scrape'),
+      url: z.string().url().describe('Original URL of the content (for context and metadata)'),
+      content: z.string().describe('Pre-fetched content of the website'),
       targetFields: z.array(z.string()).describe('Fields we are looking for'),
+      // Selectors might be less relevant if content is pre-processed (e.g. markdown)
+      // but kept for potential future use or if HTML content is passed.
       selectors: z.object({
         about: z.array(z.string()).optional(),
         contact: z.array(z.string()).optional(),
         team: z.array(z.string()).optional(),
-      }).optional().describe('CSS selectors to focus on specific sections'),
+      }).optional().describe('CSS selectors to focus on specific sections (if HTML is processed)'),
     }),
     
-    async execute({ url, targetFields }: { url: string; targetFields: string[]; selectors?: { about?: string[]; contact?: string[]; team?: string[] } }) {
+    async execute({ url, content, targetFields, selectors }: { url: string; content: string; targetFields: string[]; selectors?: { about?: string[]; contact?: string[]; team?: string[] } }) {
       try {
-        console.log(`🌐 Scraping: ${url}`);
+        console.log(`📄 Processing content for: ${url}`);
         if (onProgress) {
-          onProgress(`Starting to scrape ${url}`, 'info');
+          onProgress(`Processing content for ${url} (${content.length} chars)`, 'info');
         }
+
+        // Create a mock ScrapeResult object from the input content
+        const mockScrapeResult: ScrapeResult = {
+          success: true,
+          markdown: content, // The new content parameter
+          html: '', // HTML might not be available or relevant with pre-fetched markdown
+          metadata: { sourceURL: url } // Store the original URL in metadata
+        };
         
-        const result = await firecrawl.scrapeUrl(url, {
-          formats: ['markdown', 'html'],
-          onlyMainContent: true,
-          waitFor: 2000, // Wait for dynamic content
-        });
-        
-        if (!result.success) {
-          throw new Error(`Failed to scrape ${url}`);
-        }
-        
-        if (onProgress) {
-          onProgress(`Successfully scraped ${url} (${result.markdown?.length || 0} chars)`, 'success');
-        }
-        
-        // Extract structured data from the page
+        // Extract structured data from the content
         const extractedData: Record<string, unknown> = {};
         if (onProgress) {
-          onProgress(`Extracting ${targetFields.length} fields from scraped content...`, 'info');
+          onProgress(`Extracting ${targetFields.length} fields from content...`, 'info');
         }
         
         // Try to extract company name from various sources
         if (targetFields.includes('Company Name') || targetFields.includes('companyName')) {
-          extractedData.companyName = extractCompanyName(result);
+          extractedData.companyName = extractCompanyName(mockScrapeResult);
         }
         
         // Extract description
         if (targetFields.includes('Company Description') || targetFields.includes('description')) {
-          extractedData.description = extractDescription(result);
+          extractedData.description = extractDescription(mockScrapeResult);
         }
         
         // Extract location/headquarters
         if (targetFields.includes('Location') || targetFields.includes('headquarters')) {
-          extractedData.location = extractLocation(result);
+          extractedData.location = extractLocation(mockScrapeResult);
         }
         
         // Extract industry
         if (targetFields.includes('Industry') || targetFields.includes('industry')) {
-          extractedData.industry = extractIndustry(result);
+          extractedData.industry = extractIndustry(mockScrapeResult);
         }
         
         const extractedCount = Object.keys(extractedData).length;
         if (onProgress && extractedCount > 0) {
-          onProgress(`Extracted ${extractedCount} fields from website`, 'success');
+          onProgress(`Successfully extracted ${extractedCount} fields from content for ${url}`, 'success');
+        } else if (onProgress) {
+          onProgress(`No targeted fields found in content for ${url}`, 'info');
         }
         
         return {
           url,
           extractedData,
-          rawContent: result.markdown?.substring(0, 5000), // Limit size
-          metadata: result.metadata,
+          rawContent: content.substring(0, 5000), // Use input content for rawContent
+          metadata: mockScrapeResult.metadata, // Use metadata from mockScrapeResult
         };
       } catch (error) {
-        console.error(`Failed to scrape ${url}:`, error);
+        console.error(`Failed to process content for ${url}:`, error);
         if (onProgress) {
-          onProgress(`Failed to scrape ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'warning');
+          onProgress(`Failed to process content for ${url}: ${error instanceof Error ? error.message : 'Unknown error'}`, 'warning');
         }
         return {
           url,
           error: error instanceof Error ? error.message : 'Unknown error',
           extractedData: {},
+          rawContent: content.substring(0, 200), // Provide a snippet on error too
+          metadata: { sourceURL: url }
         };
       }
     },
@@ -99,35 +100,49 @@ export function createWebsiteScraperTool(firecrawlApiKey: string, onProgress?: (
 
 function extractCompanyName(result: ScrapeResult): string | null {
   const markdown = result.markdown || '';
-  const metadata = result.metadata || {};
+  const metadata = result.metadata || {}; // Contains sourceURL now
   
-  // Try metadata first
-  if (metadata.title && typeof metadata.title === 'string') {
-    // Clean common suffixes
-    const cleaned = metadata.title
-      .replace(/\s*[\||-]\s*Official\s*(Website|Site)?\s*$/i, '')
-      .replace(/\s*[\||-]\s*Home\s*$/i, '')
-      .replace(/\s*[\||-]\s*About\s*.*$/i, '')
-      .trim();
-    
-    if (cleaned && cleaned.length > 2 && cleaned.length < 100) {
-      return cleaned;
-    }
-  }
-  
+  // Try metadata.title (if available, not guaranteed by this tool's input)
+  // or sourceURL as a fallback for context if needed in future.
+  // For now, we primarily rely on markdown content.
+
+  // If 'title' was part of a richer metadata object passed along with content, it could be used.
+  // Example: if (metadata.title && typeof metadata.title === 'string') { ... }
+
   // Look for h1 headers
   const h1Match = markdown.match(/^#\s+([^#\n]+)/m);
   if (h1Match) {
     const h1Text = h1Match[1].trim();
     if (h1Text.length > 2 && h1Text.length < 100) {
-      return h1Text;
+      // Avoid returning generic titles like "Blog" or "About Us" if they are the H1
+      if (!/^(blog|about us|contact us|terms of service|privacy policy)$/i.test(h1Text)) {
+         return h1Text;
+      }
     }
   }
   
   // Look for "About [Company]" patterns
-  const aboutMatch = markdown.match(/About\s+([A-Z][A-Za-z0-9\s&.-]+?)(?:\s*[\n|,.])/);
+  const aboutMatch = markdown.match(/About\s+([A-Z][A-Za-z0-9\s&.'-]+?)(?:\s*[\n|,.])/);
   if (aboutMatch) {
     return aboutMatch[1].trim();
+  }
+
+  // Try to get company name from the URL if nothing else is found
+  if (metadata.sourceURL && typeof metadata.sourceURL === 'string') {
+    try {
+      const urlObj = new URL(metadata.sourceURL as string);
+      let hostname = urlObj.hostname;
+      // Remove www. and common TLDs
+      hostname = hostname.replace(/^www\./, '');
+      hostname = hostname.substring(0, hostname.lastIndexOf('.')); // Naive TLD removal
+      // Capitalize and replace hyphens
+      const potentialName = hostname.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      if (potentialName && potentialName.length > 2 && potentialName.length < 50) {
+        return potentialName;
+      }
+    } catch (e) {
+      // Invalid URL, ignore
+    }
   }
   
   return null;
@@ -135,12 +150,11 @@ function extractCompanyName(result: ScrapeResult): string | null {
 
 function extractDescription(result: ScrapeResult): string | null {
   const markdown = result.markdown || '';
-  const metadata = result.metadata || {};
-  
-  // Try meta description first
-  if (metadata.description && typeof metadata.description === 'string' && metadata.description.length > 20) {
-    return metadata.description as string;
-  }
+  // const metadata = result.metadata || {}; // metadata.description might not be available
+
+  // if (metadata.description && typeof metadata.description === 'string' && metadata.description.length > 20) {
+  //   return metadata.description as string;
+  // }
   
   // Look for mission/about sections
   const patterns = [
