@@ -53,9 +53,9 @@ export function createCompanyAgent(firecrawl: FirecrawlApp) {
     
     When searching for a company:
     - Try multiple query variations
-    - Look for official company pages, LinkedIn, Crunchbase
+    - Look for official company pages, LinkedIn, Crunchbase, search over google and get the info from website listing description of like job listing websites or any other place where the company data is found.
     - Validate employee counts (startups usually < 1000, only large corps > 10000)
-    - Normalize industry names to standard categories
+    - Normalize industry names to standard categories with thier niche 
     
     Output structured data with confidence scores for each field.`,
     tools: [createSpecializedSearchTool(firecrawl)],
