@@ -81,23 +81,19 @@ export function EnrichmentTable({ rows, fields, emailColumn }: EnrichmentTablePr
     setAgentMessages([]); // Clear previous messages
     
     try {
-      // Get API keys from localStorage if not in environment
-      const firecrawlApiKey = localStorage.getItem('firecrawl_api_key');
-      const openaiApiKey = localStorage.getItem('openai_api_key');
-      
+      // Get API keys using the new API key manager
+      const { getApiKeyHeaders } = await import('@/lib/api-key-manager');
+      const { getCurrentLLMSelection } = await import('@/lib/llm-manager');
+
+      const apiKeyHeaders = getApiKeyHeaders();
+      const llmSelection = getCurrentLLMSelection();
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...(useAgents && { 'x-use-agents': 'true' }),
+        ...apiKeyHeaders,
       };
-      
-      // Add API keys to headers if available
-      if (firecrawlApiKey) {
-        headers['X-Firecrawl-API-Key'] = firecrawlApiKey;
-      }
-      if (openaiApiKey) {
-        headers['X-OpenAI-API-Key'] = openaiApiKey;
-      }
-      
+
       const response = await fetch('/api/enrich', {
         method: 'POST',
         headers,
@@ -107,6 +103,8 @@ export function EnrichmentTable({ rows, fields, emailColumn }: EnrichmentTablePr
           emailColumn,
           useAgents,
           useV2Architecture: true, // Use new agent architecture when agents are enabled
+          llmProvider: llmSelection.provider,
+          llmModel: llmSelection.model,
         }),
       });
 

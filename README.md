@@ -9,7 +9,7 @@ Turn a simple list of emails into a rich dataset with company profiles, funding 
 ## Technologies
 
 - **Firecrawl**: Web scraping and content aggregation
-- **OpenAI**: Intelligent data extraction and synthesis
+- **Multiple LLM Providers**: OpenAI, Anthropic, DeepSeek, and Grok for intelligent data extraction
 - **Next.js 15**: Modern React framework with App Router
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmendableai%2Ffire-enrich&env=FIRECRAWL_API_KEY,OPENAI_API_KEY&envDescription=API%20keys%20required%20for%20Fire%20Enrich&envLink=https%3A%2F%2Fgithub.com%2Fmendableai%2Ffire-enrich%23required-api-keys)
@@ -18,22 +18,39 @@ Turn a simple list of emails into a rich dataset with company profiles, funding 
 
 ### Required API Keys
 
-| Service | Purpose | Get Key |
-|---------|---------|---------|
-| Firecrawl | Web scraping and content aggregation | [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys) |
-| OpenAI | Intelligent data extraction | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+| Service | Purpose | Get Key | Required |
+|---------|---------|---------|----------|
+| Firecrawl | Web scraping and content aggregation | [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys) | ✅ Yes |
+| **LLM Providers** (choose one or more): | | | |
+| OpenAI | GPT models for data extraction | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | 🔄 Optional |
+| Anthropic | Claude models for data extraction | [console.anthropic.com](https://console.anthropic.com) | 🔄 Optional |
+| DeepSeek | Cost-effective AI models | [platform.deepseek.com](https://platform.deepseek.com) | 🔄 Optional |
+| Grok | X.AI models for data extraction | [console.x.ai](https://console.x.ai) | 🔄 Optional |
+
+**Note**: You need at least one LLM provider API key. You can switch between providers in the UI.
 
 ### Quick Start
 
 1. Clone this repository
 2. Create a `.env.local` file with your API keys:
-   ```
+   ```bash
+   # Required
    FIRECRAWL_API_KEY=your_firecrawl_key
+
+   # LLM Providers (add one or more)
    OPENAI_API_KEY=your_openai_key
+   ANTHROPIC_API_KEY=your_anthropic_key
+   DEEPSEEK_API_KEY=your_deepseek_key
+   GROK_API_KEY=your_grok_key
+
+   # Optional: Set default provider
+   LLM_PROVIDER=grok
+   LLM_MODEL=grok-beta
    ```
 3. Install dependencies: `npm install` or `yarn install`
 4. Run the development server: `npm run dev` or `yarn dev`
 5. Open [http://localhost:3000](http://localhost:3000)
+6. **Select your LLM provider** using the switcher in the top-right corner
 
 ## Example Enrichment
 
@@ -62,6 +79,34 @@ Turn a simple list of emails into a rich dataset with company profiles, funding 
   ]
 }
 ```
+
+## 🔄 LLM Provider Switching
+
+Fire Enrich supports multiple AI providers, allowing you to choose the best model for your needs:
+
+### Supported Providers
+
+| Provider | Default Model | Strengths | Cost | Speed |
+|----------|---------------|-----------|------|-------|
+| **OpenAI** | `gpt-4o` | High accuracy, reliable | $$$ | Fast |
+| **Anthropic** | `claude-3-5-sonnet-20241022` | Excellent reasoning | $$$ | Fast |
+| **DeepSeek** | `deepseek-chat` | Cost-effective | $ | Fast |
+| **Grok** | `grok-beta` | Real-time data, competitive | $$ | Very Fast |
+
+### How to Switch Providers
+
+1. **Click the LLM switcher** in the top-right corner of the interface
+2. **Select your preferred provider and model**
+3. **Start enrichment** - the selected provider will be used throughout the entire process
+
+### Provider Selection Tips
+
+- **For maximum accuracy**: Use OpenAI GPT-4o or Anthropic Claude-3.5-Sonnet
+- **For cost optimization**: Use DeepSeek for large datasets
+- **For speed**: Use Grok for fastest processing
+- **For experimentation**: Try different providers to compare results
+
+The entire multi-agent system (Discovery, Profile, Funding, Tech Stack, and General agents) will use your selected provider consistently throughout the enrichment process.
 
 ## How It Works
 
@@ -252,6 +297,7 @@ Each module uses GPT-4o for intelligent data extraction, but follows determinist
 
 ### Key Features
 
+-   **Multi-Provider LLM Support**: Choose between OpenAI, Anthropic, DeepSeek, and Grok models with real-time switching.
 -   **Phased Extraction System**: Sequential modules that build context for increasingly accurate results.
 -   **Drag & Drop CSV**: Simple, intuitive interface to get started in seconds.
 -   **Customizable Fields**: Choose from a list of common data points or generate your own with natural language.
