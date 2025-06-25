@@ -5,9 +5,25 @@ import type { EnrichmentField, EnrichmentResult } from '../types';
 
 export class OpenAIService {
   private client: OpenAI;
+  private ollamaBaseUrl?: string;
+  private ollamaModel?: string;
 
-  constructor(apiKey: string) {
-    this.client = new OpenAI({ apiKey });
+  constructor(apiKey: string, ollamaBaseUrl?: string, ollamaModel?: string) {
+    this.ollamaBaseUrl = ollamaBaseUrl;
+    this.ollamaModel = ollamaModel;
+
+    if (this.ollamaBaseUrl && this.ollamaModel) {
+      this.client = new OpenAI({
+        apiKey: 'ollama', // Ollama doesn't require an API key
+        baseURL: this.ollamaBaseUrl,
+      });
+    } else {
+      this.client = new OpenAI({ apiKey });
+    }
+  }
+
+  private getModel(): string {
+    return this.ollamaModel || 'gpt-4o';
   }
 
   createEnrichmentSchema(fields: EnrichmentField[]) {
@@ -139,7 +155,7 @@ export class OpenAIService {
       }
 
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.getModel(),
         messages: [
           {
             role: 'system',
@@ -374,7 +390,7 @@ DOMAIN PARKING/SALE PAGES:
       }
       
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.getModel(),
         messages: [
           {
             role: 'system',
@@ -754,7 +770,7 @@ REMEMBER: Extract exact_text from the "=== ACTUAL CONTENT BELOW ===" section, NO
         .join('\n');
       
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: this.getModel(),
         messages: [
           {
             role: 'system',
@@ -824,7 +840,7 @@ ${schemaDescription}
   ): Promise<string[]> {
     try {
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: this.getModel(),
         messages: [
           {
             role: 'system',

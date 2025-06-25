@@ -15,19 +15,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    const ollamaApiBase = process.env.OLLAMA_API_BASE;
+    const ollamaModel = process.env.OLLAMA_MODEL;
+
+    if (!openaiApiKey && (!ollamaApiBase || !ollamaModel)) {
       return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
+        { error: 'OpenAI API key or Ollama configuration not configured' },
         { status: 500 }
       );
     }
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    const openai = new OpenAI(
+      (ollamaApiBase && ollamaModel) ? {
+        apiKey: 'ollama', // Ollama doesn't require an API key
+        baseURL: ollamaApiBase,
+      } : {
+        apiKey: openaiApiKey,
+      }
+    );
+
+    const modelToUse = (ollamaApiBase && ollamaModel) ? ollamaModel : 'gpt-4o';
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: modelToUse,
       messages: [
         {
           role: 'system',

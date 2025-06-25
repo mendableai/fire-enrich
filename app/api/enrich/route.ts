@@ -52,14 +52,21 @@ export async function POST(request: NextRequest) {
     // Check environment variables and headers for API keys
     const openaiApiKey = process.env.OPENAI_API_KEY || request.headers.get('X-OpenAI-API-Key');
     const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || request.headers.get('X-Firecrawl-API-Key');
+    const ollamaApiBase = process.env.OLLAMA_API_BASE || request.headers.get('X-Ollama-API-Base');
+    const ollamaModel = process.env.OLLAMA_MODEL || request.headers.get('X-Ollama-Model');
     
-    if (!openaiApiKey || !firecrawlApiKey) {
-      console.error('Missing API keys:', { 
-        hasOpenAI: !!openaiApiKey, 
-        hasFirecrawl: !!firecrawlApiKey 
-      });
+    if (!firecrawlApiKey) {
+      console.error('Missing Firecrawl API key');
       return NextResponse.json(
-        { error: 'Server configuration error: Missing API keys' },
+        { error: 'Server configuration error: Missing Firecrawl API key' },
+        { status: 500 }
+      );
+    }
+
+    if (!openaiApiKey && (!ollamaApiBase || !ollamaModel)) {
+      console.error('Missing OpenAI API key or Ollama configuration');
+      return NextResponse.json(
+        { error: 'Server configuration error: Missing OpenAI API key or Ollama configuration' },
         { status: 500 }
       );
     }
@@ -69,8 +76,10 @@ export async function POST(request: NextRequest) {
     
     console.log(`[STRATEGY] Using ${strategyName} - Advanced multi-agent architecture with specialized agents`);
     const enrichmentStrategy = new AgentEnrichmentStrategy(
-      openaiApiKey,
-      firecrawlApiKey
+      openaiApiKey || 'ollama', // Pass 'ollama' if using Ollama, actual key not needed by OpenAIService then
+      firecrawlApiKey,
+      ollamaApiBase,
+      ollamaModel
     );
 
     // Load skip list
