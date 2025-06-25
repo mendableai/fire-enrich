@@ -8,8 +8,10 @@ export class AgentEnrichmentStrategy {
   constructor(
     openaiApiKey: string,
     firecrawlApiKey: string,
+    ollamaApiBase?: string,
+    ollamaModel?: string,
   ) {
-    this.orchestrator = new AgentOrchestrator(firecrawlApiKey, openaiApiKey);
+    this.orchestrator = new AgentOrchestrator(firecrawlApiKey, openaiApiKey, ollamaApiBase, ollamaModel);
   }
   
   async enrichRow(
